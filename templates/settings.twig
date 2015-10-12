@@ -1,0 +1,21 @@
+{% from "_includes/forms" import textarea, text %}
+
+<div class="field">
+  <div class="heading">
+    <label>{{ 'Minimum number of date fields'|t }}</label>
+    <div class="instructions"><p>{{ ''|t }}</p></div>
+  </div>
+  <div class="input">
+    {{ text({'class':'text nicetext fullwidth', 'id':'minDates', 'name':'minDates', 'value':settings.minDates}) }}
+  </div>
+</div>
+
+<div class="field">
+  <div class="heading">
+    <label>{{ 'Maximum number of date fields'|t }}</label>
+    <div class="instructions"><p>{{ 'Leave empty for no limit.'|t }}</p></div>
+  </div>
+  <div class="input">
+    {{ text({'class':'text nicetext fullwidth', 'id':'maxDates', 'name':'maxDates', 'value':settings.maxDates}) }}
+  </div>
+</div>

@@ -1,0 +1,123 @@
+{% from "_includes/forms" import hidden, text, date %}
+
+{% if value is not defined or value is empty -%}
+  {% set value = {"json":"", "dates":[]} -%}
+{% endif -%}
+
+{% set id = id ~ '-date' -%}
+
+{% if name is defined and name -%}
+  {% set name = name ~ '[date]' -%}
+{% endif -%}
+
+  {{ hidden({'class':'code fullwidth', 'id':id ~ '-input', 'name':name, 'value':value.json}) }}
+
+  <div id="{{ id }}" class="elementselect" data-mindates="{{ settings.minDates }}" data-maxdates="{{ settings.maxDates }}">
+    <div class="elements" style="">
+      {#
+      {% for d in value.dates %}
+      <div class="element removable" data-dateindex="{{ loop.index0 }}" data-editable="" tabindex="{{ loop.index0 }}" style="visibility: visible;">
+        <div class="datewrapper">
+          {%- include "_includes/forms/text" with { class:"date", autocomplete: false, size: 10, value: (d ? d.localeDate() : '') } -%}
+        </div>
+        <a class="delete icon" title="Remove" data-dateindex="{{ loop.index0 }}"></a>
+      </div>
+      {% endfor %}
+      #}
+      <div class="btn add icon dashed" tabindex="0" style="margin-top:6px">Add</div>
+    </div>
+  </div>
+
+
+{%- set js %}
+
+	var nsId = '#{{ id|namespaceInputId|e('js') }}';
+
+  // remove element
+  $('#{{ id|namespaceInputId|e('js') }}').on('click', '.delete', function() {
+    var $elements = $(this).parent().parent();
+    var index = $(this).parent().index();
+    $(this).parent().remove();
+
+    var value = [];
+    $('#{{ id|namespaceInputId|e('js') }}' + ' .date').each(function() { value.push($(this).datepicker("getDate"));});
+    $('#{{ id|namespaceInputId|e('js') }}' + '-input').val(JSON.stringify(value));
+
+    // if we can remove then we can later add
+    $('#{{ id|namespaceInputId|e('js') }}' + ' .add').show();
+
+  });
+
+  // add element
+  $('#{{ id|namespaceInputId|e('js') }}' + ' .add').click(function() {
+     var $el = $('<div class="element removablex" style="float:left; margin: 0 5px 5px 0"><div class="datewrapper"><input class="text date" type="text"  size="10"  value="" autocomplete="off"></div><a class="delete icon" title="Remove"></a></div>');
+
+     $(this).before($el);
+     $el.find('.date').datepicker({
+       constrainInput: false,
+       dateFormat: '{{ craft.i18n.datepickerJsFormat }}',
+       defaultDate: new Date(),
+       prevText:   '{{ "Prev"|t|e('js') }}',
+       nextText:   '{{ "Next"|t|e('js') }}',
+       firstDay:   {{ currentUser.weekStartDay }},
+     });
+
+    var value = [];
+    $('#{{ id|namespaceInputId|e('js') }}' + ' .date').each(function() { value.push($(this).datepicker("getDate"));});
+    $('#{{ id|namespaceInputId|e('js') }}' + '-input').val(JSON.stringify(value));
+
+		var maxDates = $('#{{ id|namespaceInputId|e('js') }}').data('maxdates');
+		if (maxDates) {
+			if ($('#{{ id|namespaceInputId|e('js') }} .element').length >= maxDates) {
+				$('#{{ id|namespaceInputId|e('js') }}' + ' .add').hide();
+			}
+		}
+  });
+
+  // changes
+  $('#{{ id|namespaceInputId|e('js') }}').on('change', '.date', function() {
+    var value = [];
+    $('#{{ id|namespaceInputId|e('js') }}' + ' .date').each(function() { value.push($(this).datepicker("getDate"));});
+    $('#{{ id|namespaceInputId|e('js') }}' + '-input').val(JSON.stringify(value));
+  });
+
+  {% set allDates = value.dates %}
+  {% set fill = 0 %}
+  {% set fill = settings.minDates - value.dates|length %}
+
+  {% if value.dates|length < settings.minDates %}
+    {% for i in 1..fill %}
+        {% set allDates = allDates|merge(['']) %}
+    {% endfor %}
+  {% endif %}
+
+  {% for d in allDates %}
+    console.log('{{name}}:{{loop.index0}},{{fill}},{{ d }}');
+    {% set date = d is empty ? '' : d.localeDate() %}
+
+    {% if loop.index0 < settings.minDates  %}
+      var $el = $('<div class="element removablex" style="float:left; margin: 0 5px 5px 0"><div class="datewrapper"><input class="text date" type="text"  size="10" value="{{ date }}" autocomplete="off"></div></div>');
+    {% else %}
+      var $el = $('<div class="element removablex" style="float:left; margin: 0 5px 5px 0"><div class="datewrapper"><input class="text date" type="text"  size="10" value="{{ date }}" autocomplete="off"></div><a class="delete icon" title="Remove"></a></div>');
+    {% endif %}
+    $('#{{ id|namespaceInputId|e('js') }}' + ' .elements .add').before($el);
+
+    $el.find('.date').datepicker({
+     constrainInput: false,
+     dateFormat: '{{ craft.i18n.datepickerJsFormat }}',
+     defaultDate: new Date(),
+     prevText:   '{{ "Prev"|t|e('js') }}',
+     nextText:   '{{ "Next"|t|e('js') }}',
+     firstDay:   {{ currentUser.weekStartDay }},
+    });
+
+  {% endfor %}
+	var maxDates = $('#{{ id|namespaceInputId|e('js') }}').data('maxdates');
+	if (maxDates) {
+		if ($('#{{ id|namespaceInputId|e('js') }} .element').length >= maxDates) {
+			$('#{{ id|namespaceInputId|e('js') }}' + ' .add').hide();
+		}
+	}
+
+{%- endset %}
+{%- includeJs js %}
