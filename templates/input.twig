@@ -77,7 +77,11 @@
   // changes
   $('#{{ id|namespaceInputId|e('js') }}').on('change', '.date', function() {
     var value = [];
-    $('#{{ id|namespaceInputId|e('js') }}' + ' .date').each(function() { value.push($(this).datepicker("getDate"));});
+    $('#{{ id|namespaceInputId|e('js') }}' + ' .date').each(function() {
+      var date = $(this).datepicker("getDate");
+      date.setMinutes(date.getMinutes() - date.getTimezoneOffset()); // fix timezone issues (at least for me)
+      value.push(date);
+    });
     $('#{{ id|namespaceInputId|e('js') }}' + '-input').val(JSON.stringify(value));
   });
 
@@ -92,7 +96,6 @@
   {% endif %}
 
   {% for d in allDates %}
-    console.log('{{name}}:{{loop.index0}},{{fill}},{{ d }}');
     {% set date = d is empty ? '' : d.localeDate() %}
 
     {% if loop.index0 < settings.minDates  %}
